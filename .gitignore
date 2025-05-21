@@ -1,0 +1,20 @@
+/target/
+.idea
+.DS_Store
+/data
+.trustify
+/download/
+.envrc
+
+*.cdx.json
+*.folded
+
+/flame*.svg
+/perf.data*
+/dump.sql
+.ai_history.txt
+
+
+# Added by cargo
+
+/target
