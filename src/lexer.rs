@@ -17,6 +17,7 @@ pub const LPAREN: char = '(';
 pub const RPAREN: char = ')';
 
 // Lexer token reader.
+#[derive(Debug, PartialEq)]
 pub struct Lexer {
     pub tokens: Vec<Token>,
     pub index: usize,
@@ -101,7 +102,7 @@ impl Lexer {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Kind {
     Literal,
     String,
@@ -111,7 +112,7 @@ pub enum Kind {
 }
 
 // Token scanned token.
-#[derive(Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
     pub kind: Kind,
     pub value: Vec<char>,
@@ -132,9 +133,13 @@ impl Reader {
     // Next character.
     pub fn next(&mut self) -> Option<char> {
         if self.index < self.chars.len() {
+            let current_index = self.index;
             self.index += 1;
+
+            self.chars.get(current_index).cloned()
+        } else {
+            None
         }
-        self.chars.get(self.index).cloned()
     }
 
     // Put rewinds one character.
@@ -207,5 +212,316 @@ impl Operator<'_> {
                 None => break Err("End of operator not found".to_string()),
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_lexer() {
+        let result = Lexer::with("name:elmer,age:20".to_string());
+        assert_eq!(
+            result,
+            Ok(Lexer {
+                tokens: vec![
+                    Token {
+                        kind: Kind::Literal,
+                        value: "name".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![COLON]
+                    },
+                    Token {
+                        kind: Kind::Literal,
+                        value: "elmer".chars().collect()
+                    },
+                    //
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![COMMA]
+                    },
+                    //
+                    Token {
+                        kind: Kind::Literal,
+                        value: "age".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![COLON]
+                    },
+                    Token {
+                        kind: Kind::Literal,
+                        value: "20".chars().collect()
+                    },
+                ],
+                index: 0
+            })
+        );
+
+        let result = Lexer::with("name:\"one|two\"".to_string());
+        assert_eq!(
+            result,
+            Ok(Lexer {
+                tokens: vec![
+                    Token {
+                        kind: Kind::Literal,
+                        value: "name".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![COLON]
+                    },
+                    Token {
+                        kind: Kind::String,
+                        value: "one|two".chars().collect()
+                    },
+                ],
+                index: 0
+            })
+        );
+
+        let result = Lexer::with("name:\"one=two\"".to_string());
+        assert_eq!(
+            result,
+            Ok(Lexer {
+                tokens: vec![
+                    Token {
+                        kind: Kind::Literal,
+                        value: "name".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![COLON]
+                    },
+                    Token {
+                        kind: Kind::String,
+                        value: "one=two".chars().collect()
+                    },
+                ],
+                index: 0
+            })
+        );
+
+        let result = Lexer::with("name:\"(one|two)\"".to_string());
+        assert_eq!(
+            result,
+            Ok(Lexer {
+                tokens: vec![
+                    Token {
+                        kind: Kind::Literal,
+                        value: "name".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![COLON]
+                    },
+                    Token {
+                        kind: Kind::String,
+                        value: "(one|two)".chars().collect()
+                    },
+                ],
+                index: 0
+            })
+        );
+
+        let result = Lexer::with("name:\"hello world\"".to_string());
+        assert_eq!(
+            result,
+            Ok(Lexer {
+                tokens: vec![
+                    Token {
+                        kind: Kind::Literal,
+                        value: "name".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![COLON]
+                    },
+                    Token {
+                        kind: Kind::String,
+                        value: "hello world".chars().collect()
+                    },
+                ],
+                index: 0
+            })
+        );
+
+        let result = Lexer::with("name = \"elmer\" , age > 20".to_string());
+        assert_eq!(
+            result,
+            Ok(Lexer {
+                tokens: vec![
+                    Token {
+                        kind: Kind::Literal,
+                        value: "name".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![EQ]
+                    },
+                    Token {
+                        kind: Kind::String,
+                        value: "elmer".chars().collect()
+                    },
+                    //
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![COMMA]
+                    },
+                    //
+                    Token {
+                        kind: Kind::Literal,
+                        value: "age".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![GT]
+                    },
+                    Token {
+                        kind: Kind::Literal,
+                        value: "20".chars().collect()
+                    },
+                ],
+                index: 0
+            })
+        );
+
+        let result = Lexer::with("name~elmer*".to_string());
+        assert_eq!(
+            result,
+            Ok(Lexer {
+                tokens: vec![
+                    Token {
+                        kind: Kind::Literal,
+                        value: "name".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![LIKE]
+                    },
+                    Token {
+                        kind: Kind::Literal,
+                        value: "elmer*".chars().collect()
+                    },
+                ],
+                index: 0
+            })
+        );
+
+        let result = Lexer::with("name=(one|two|three)".to_string());
+        assert_eq!(
+            result,
+            Ok(Lexer {
+                tokens: vec![
+                    Token {
+                        kind: Kind::Literal,
+                        value: "name".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![EQ]
+                    },
+                    Token {
+                        kind: Kind::Lparen,
+                        value: vec![LPAREN]
+                    },
+                    Token {
+                        kind: Kind::Literal,
+                        value: "one".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![OR]
+                    },
+                    Token {
+                        kind: Kind::Literal,
+                        value: "two".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![OR]
+                    },
+                    Token {
+                        kind: Kind::Literal,
+                        value: "three".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Rparen,
+                        value: vec![RPAREN]
+                    },
+                ],
+                index: 0
+            })
+        );
+
+        let result = Lexer::with("name=(one,two,three)".to_string());
+        assert_eq!(
+            result,
+            Ok(Lexer {
+                tokens: vec![
+                    Token {
+                        kind: Kind::Literal,
+                        value: "name".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![EQ]
+                    },
+                    Token {
+                        kind: Kind::Lparen,
+                        value: vec![LPAREN]
+                    },
+                    Token {
+                        kind: Kind::Literal,
+                        value: "one".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![AND]
+                    },
+                    Token {
+                        kind: Kind::Literal,
+                        value: "two".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![AND]
+                    },
+                    Token {
+                        kind: Kind::Literal,
+                        value: "three".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Rparen,
+                        value: vec![RPAREN]
+                    },
+                ],
+                index: 0
+            })
+        );
+
+        let result = Lexer::with("name:'elmer'".to_string());
+        assert_eq!(
+            result,
+            Ok(Lexer {
+                tokens: vec![
+                    Token {
+                        kind: Kind::Literal,
+                        value: "name".chars().collect()
+                    },
+                    Token {
+                        kind: Kind::Operator,
+                        value: vec![COLON]
+                    },
+                    Token {
+                        kind: Kind::String,
+                        value: "elmer".chars().collect()
+                    },
+                ],
+                index: 0
+            })
+        );
     }
 }
