@@ -16,12 +16,15 @@ pub const SPACE: char = ' ';
 pub const LPAREN: char = '(';
 pub const RPAREN: char = ')';
 
+// Lexer token reader.
 pub struct Lexer {
     pub tokens: Vec<Token>,
+    pub index: usize,
 }
 
 impl Lexer {
-    pub fn with(filter: String) -> Result<Vec<Token>, String> {
+    // With builds with the specified filter.
+    pub fn with(filter: String) -> Result<Self, String> {
         let mut tokens: Vec<Token> = vec![];
 
         let mut reader = Reader::from(&filter);
@@ -40,7 +43,10 @@ impl Lexer {
                 QUOTE | SQUOTE => {
                     reader.put();
                     push(&mut bfr, &mut tokens, Kind::Literal);
-                    let quoted = reader.read_quoted()?;
+                    let mut quoted = Quoted {
+                        reader: &mut reader,
+                    };
+                    let quoted = quoted.read()?;
 
                     tokens.push(quoted);
                 }
@@ -57,7 +63,11 @@ impl Lexer {
                 COLON | COMMA | OR | EQ | LIKE | NOT | LT | GT => {
                     reader.put();
                     push(&mut bfr, &mut tokens, Kind::Literal);
-                    let operator = reader.read_operator()?;
+
+                    let mut operator = Operator {
+                        reader: &mut reader,
+                    };
+                    let operator = operator.read()?;
 
                     tokens.push(operator);
                 }
@@ -66,10 +76,30 @@ impl Lexer {
         }
 
         push(&mut bfr, &mut tokens, Kind::Literal);
-        Ok(tokens)
+        Ok(Self { tokens, index: 0 })
+    }
+
+    // next returns the next token.
+    pub fn next(&mut self) -> Option<Token> {
+        if self.index < self.tokens.len() {
+            let token = self.tokens.get(self.index);
+            self.index += 1;
+
+            token.cloned()
+        } else {
+            None
+        }
+    }
+
+    // Put rewinds the lexer by 1 token.
+    pub fn put(&mut self) {
+        if self.index > 0 {
+            self.index -= 1;
+        }
     }
 }
 
+#[derive(Clone)]
 pub enum Kind {
     Literal,
     String,
@@ -78,16 +108,17 @@ pub enum Kind {
     Rparen,
 }
 
+// Token scanned token.
+#[derive(Clone)]
 pub struct Token {
-    kind: Kind,
-    value: String,
+    pub kind: Kind,
+    pub value: String,
 }
 
-//
-
+// Reader scan the input.
 pub struct Reader {
-    chars: Vec<char>,
-    index: usize,
+    pub chars: Vec<char>,
+    pub index: usize,
 }
 
 impl Reader {
@@ -110,17 +141,25 @@ impl Reader {
             self.index -= 1;
         }
     }
+}
 
+// Quoted string token reader.
+pub struct Quoted<'a> {
+    reader: &'a mut Reader,
+}
+
+impl Quoted<'_> {
     // Read token
-    pub fn read_quoted(&mut self) -> Result<Token, String> {
+    pub fn read(&mut self) -> Result<Token, String> {
         let mut last_ch: Option<char> = None;
         let mut bfr: String = String::new();
         let quote = self
+            .reader
             .next()
             .ok_or("Could not get first quoted character".to_string())?;
 
         loop {
-            match self.next() {
+            match self.reader.next() {
                 Some(ch) => {
                     if ch == quote {
                         if let Some(last_ch) = last_ch {
@@ -140,16 +179,23 @@ impl Reader {
             }
         }
     }
+}
 
+// Operator token reader.
+pub struct Operator<'a> {
+    reader: &'a mut Reader,
+}
+
+impl Operator<'_> {
     // Read token
-    pub fn read_operator(&mut self) -> Result<Token, String> {
+    pub fn read(&mut self) -> Result<Token, String> {
         let mut bfr: String = String::new();
         loop {
-            match self.next() {
+            match self.reader.next() {
                 Some(ch) => match ch {
                     COLON | COMMA | OR | EQ | LIKE | NOT | LT | GT => bfr.push(ch),
                     _ => {
-                        self.put();
+                        self.reader.put();
                         break Ok(Token {
                             kind: Kind::Operator,
                             value: bfr,
