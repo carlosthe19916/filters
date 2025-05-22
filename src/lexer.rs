@@ -32,8 +32,10 @@ impl Lexer {
 
         let push = |bfr: &mut Vec<char>, tokens: &mut Vec<Token>, kind: Kind| {
             if !bfr.is_empty() {
-                let val: String = bfr.iter().collect();
-                tokens.push(Token { kind, value: val });
+                tokens.push(Token {
+                    kind,
+                    value: bfr.clone(),
+                });
                 bfr.clear();
             }
         };
@@ -112,7 +114,7 @@ pub enum Kind {
 #[derive(Clone)]
 pub struct Token {
     pub kind: Kind,
-    pub value: String,
+    pub value: Vec<char>,
 }
 
 // Reader scan the input.
@@ -152,7 +154,7 @@ impl Quoted<'_> {
     // Read token
     pub fn read(&mut self) -> Result<Token, String> {
         let mut last_ch: Option<char> = None;
-        let mut bfr: String = String::new();
+        let mut bfr: Vec<char> = vec![];
         let quote = self
             .reader
             .next()
@@ -189,7 +191,7 @@ pub struct Operator<'a> {
 impl Operator<'_> {
     // Read token
     pub fn read(&mut self) -> Result<Token, String> {
-        let mut bfr: String = String::new();
+        let mut bfr: Vec<char> = vec![];
         loop {
             match self.reader.next() {
                 Some(ch) => match ch {
