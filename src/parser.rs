@@ -71,7 +71,7 @@ impl Parser {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Predicate {
     pub unused: Token,
     pub field: Token,
@@ -80,8 +80,8 @@ pub struct Predicate {
 }
 
 // Value term value.
-#[derive(Debug, PartialEq)]
-pub struct Value(Vec<Token>);
+#[derive(Debug, PartialEq, Clone)]
+pub struct Value(pub Vec<Token>);
 
 impl Value {
     // ByKind returns values by kind.

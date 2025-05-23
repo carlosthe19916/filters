@@ -116,6 +116,31 @@ pub struct Token {
     pub value: Vec<char>,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum TokenValue {
+    String(String),
+    Number(usize),
+    Bool(bool),
+}
+
+impl Token {
+    pub fn as_value(&self) -> TokenValue {
+        let v: String = self.value.iter().collect();
+        match self.kind {
+            Kind::Literal => {
+                if let Ok(n) = v.parse::<usize>() {
+                    TokenValue::Number(n)
+                } else if let Ok(b) = v.parse::<bool>() {
+                    TokenValue::Bool(b)
+                } else {
+                    TokenValue::String(v)
+                }
+            }
+            _ => TokenValue::String(v),
+        }
+    }
+}
+
 // Reader scan the input.
 pub struct Reader {
     pub chars: Vec<char>,
