@@ -1,5 +1,3 @@
-use std::{char, default, io::Read};
-
 pub const COLON: char = ':';
 pub const COMMA: char = ',';
 pub const AND: char = COMMA;
