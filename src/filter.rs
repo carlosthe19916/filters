@@ -11,7 +11,7 @@ impl Filter {
     // Field returns a field.
     pub fn field(&self, name: &str) -> Option<Field> {
         let fields = self.fields(name);
-        let field = fields.get(0);
+        let field = fields.first();
         field.cloned()
     }
 
@@ -165,12 +165,13 @@ mod tests {
     use crate::parser::Parser;
 
     #[test]
-    fn test_filter() {
+    fn test_filter_empty() {
         let p = Parser::filter("");
         assert_eq!(p, Ok(Filter { predicates: vec![] }));
+    }
 
-        //
-
+    #[test]
+    fn test_filter_complex() {
         let p =
             Parser::filter("name:elmer,age:20,category=(a|b|c),name.first:elmer,name.last=fudd");
         assert!(p.is_ok());
@@ -178,6 +179,7 @@ mod tests {
         assert_eq!(filter.predicates.len(), 5);
         assert_eq!(filter.is_empty(), false);
 
+        // Test name:elmer
         let field = filter.field("name");
         assert!(field.is_some());
         let field = field.unwrap();
@@ -185,6 +187,7 @@ mod tests {
         let option = field.predicate.value.0.get(0).map(|c| c.as_value());
         assert_eq!(option, Some(TokenValue::String("elmer".to_string())));
 
+        // Test category
         let field = filter.field("category");
         assert!(field.is_some());
         let field = field.unwrap();
@@ -223,22 +226,21 @@ mod tests {
             ]
         );
 
-        //
-
+        // Test name.first
         let field = filter.field("name.first");
         assert!(field.is_some());
         let field = field.unwrap();
         let option = field.predicate.value.0.get(0).map(|c| c.as_value());
         assert_eq!(option, Some(TokenValue::String("elmer".to_string())));
 
+        // Test name.last
         let field = filter.field("name.last");
         assert!(field.is_some());
         let field = field.unwrap();
         let value = field.predicate.value.0.get(0).map(|c| c.as_value());
         assert_eq!(value, Some(TokenValue::String("fudd".to_string())));
 
-        //
-
+        // Test Resource name.first
         let resource = filter.resource("name");
         let field = resource.field("first");
         assert!(field.is_some());
@@ -247,16 +249,20 @@ mod tests {
         let value = field.predicate.value.0.get(0).map(|c| c.as_value());
         assert_eq!(value, Some(TokenValue::String("elmer".to_string())));
 
+        // Test Resource Name.First
         let resource = filter.resource("Name");
         let field = resource.field("First");
         assert!(field.is_some());
         let field = field.unwrap();
         assert_eq!(field.name(), "first");
+    }
 
-        //
-
+    #[test]
+    fn test_filter_resource_numeric() {
         let p = Parser::filter("app.name=test,app.tag.id=0");
         assert!(p.is_ok());
+
+        // Test app.name
         let filter = p.unwrap();
         let filter = filter.resource("app");
         let option = filter.field("name");
@@ -265,6 +271,7 @@ mod tests {
         let value = field.predicate.value.0.get(0).map(|c| c.as_value());
         assert_eq!(value, Some(TokenValue::String("test".to_string())));
 
+        // Test Resource app.tag.id
         let filter = filter.resource("tag");
         let option = filter.field("id");
         assert!(option.is_some());

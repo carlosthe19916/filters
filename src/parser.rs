@@ -8,7 +8,7 @@ pub struct Parser;
 
 impl Parser {
     pub fn filter(filter: &str) -> Result<Filter, String> {
-        if filter.len() == 0 {
+        if filter.is_empty() {
             return Ok(Filter { predicates: vec![] });
         }
 
@@ -19,7 +19,7 @@ impl Parser {
         loop {
             if let Some(token) = &lexer.next() {
                 if brf.len() > 2 {
-                    match (brf.get(0), brf.get(1), brf.get(2)) {
+                    match (brf.first(), brf.get(1), brf.get(2)) {
                         (Some(first), Some(second), Some(third)) => {
                             match (&first.kind, &second.kind, &third.kind) {
                                 (Kind::Operator, _, Kind::Operator) => match token.kind {
@@ -63,7 +63,7 @@ impl Parser {
             }
         }?;
 
-        if brf.len() == 0 {
+        if brf.is_empty() {
             Ok(Filter { predicates })
         } else {
             Err("Syntax error.".to_string())
@@ -99,20 +99,20 @@ impl Value {
 
     pub fn operator(&self, operator: Kind) -> bool {
         let operators = self.by_kind(vec![Kind::Operator]);
-        if operators.len() > 0 {
+        if !operators.is_empty() {
             operators[0].kind == operator
         } else {
             false
         }
     }
 
-    pub fn join(&self, val: &Vec<char>) -> Value {
+    pub fn join(&self, val: &[char]) -> Value {
         let mut tokens: Vec<Token> = vec![];
         for i in 0..self.by_kind(vec![Kind::Literal, Kind::String]).len() {
             if i > 0 {
                 tokens.push(Token {
                     kind: Kind::Operator,
-                    value: val.clone(),
+                    value: val.to_owned(),
                 });
             }
             tokens.push(self.0[i].clone());
@@ -127,7 +127,7 @@ pub struct List<'a> {
     lexer: &'a mut Lexer,
 }
 
-impl<'a> List<'a> {
+impl List<'_> {
     // Build the value.
     pub fn build(&mut self) -> Result<Value, String> {
         let mut v = Value(vec![]);
@@ -164,7 +164,7 @@ impl<'a> List<'a> {
 
         let mut i = 0;
         loop {
-            if v.0.len() == 0 {
+            if v.0.is_empty() {
                 break Err("List cannot be empty.".to_string());
             }
             if i >= v.0.len() {
@@ -180,8 +180,8 @@ impl<'a> List<'a> {
                         break Err("(LITERAL|STRING) not expected in ()".to_string());
                     }
                     (false, Kind::Operator) => {
-                        if let Some(operator) = token.value.get(0) {
-                            let operator = operator.clone();
+                        if let Some(operator) = token.value.first() {
+                            let operator = *operator;
                             if let Some(last_op) = last_op {
                                 if operator != last_op {
                                     break Err("Mixed operator detected in ().".to_string());
