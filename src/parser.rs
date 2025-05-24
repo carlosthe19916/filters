@@ -106,13 +106,13 @@ impl Value {
         }
     }
 
-    pub fn join(&self, operator: Kind) -> Value {
+    pub fn join(&self, val: &Vec<char>) -> Value {
         let mut tokens: Vec<Token> = vec![];
         for i in 0..self.by_kind(vec![Kind::Literal, Kind::String]).len() {
             if i > 0 {
                 tokens.push(Token {
                     kind: Kind::Operator,
-                    value: vec![],
+                    value: val.clone(),
                 });
             }
             tokens.push(self.0[i].clone());
@@ -209,11 +209,15 @@ impl<'a> List<'a> {
 mod tests {
     use super::*;
     use crate::lexer::{COLON, EQ};
+
     #[test]
-    fn test_parser() {
+    fn test_parser_empty_string() {
         let p = Parser::filter("");
         assert!(p.is_ok());
+    }
 
+    #[test]
+    fn test_parser_two_predicates() {
         let p = Parser::filter("name:elmer,age:20");
         assert_eq!(
             p,
@@ -258,7 +262,10 @@ mod tests {
                 ]
             })
         );
+    }
 
+    #[test]
+    fn test_parser_predicate_with_grouping() {
         let p = Parser::filter("name:elmer,category=(one|two|three),age:20");
         assert_eq!(
             p,
@@ -339,10 +346,16 @@ mod tests {
                 ]
             })
         );
+    }
 
+    #[test]
+    fn test_parser_empty_grouping() {
         let p = Parser::filter("cat=()");
         assert!(p.is_err());
+    }
 
+    #[test]
+    fn test_parser_wrong_grouping() {
         let p = Parser::filter("cat=(one|two,three)");
         assert!(p.is_err());
     }
