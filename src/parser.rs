@@ -98,9 +98,9 @@ impl Value {
     }
 
     pub fn operator(&self, operator: Kind) -> bool {
-        let operators = self.by_kind(vec![operator]);
+        let operators = self.by_kind(vec![Kind::Operator]);
         if operators.len() > 0 {
-            operators[0].value.get(0) == None
+            operators[0].kind == operator
         } else {
             false
         }
