@@ -241,8 +241,9 @@ impl Operator<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
-    fn test_lexer() {
+    fn test_lexer1() {
         let result = Lexer::with("name:elmer,age:20".to_string());
         assert_eq!(
             result,
@@ -282,7 +283,10 @@ mod tests {
                 index: 0
             })
         );
+    }
 
+    #[test]
+    fn test_or() {
         let result = Lexer::with("name:\"one|two\"".to_string());
         assert_eq!(
             result,
@@ -304,7 +308,10 @@ mod tests {
                 index: 0
             })
         );
+    }
 
+    #[test]
+    fn test_equal() {
         let result = Lexer::with("name:\"one=two\"".to_string());
         assert_eq!(
             result,
@@ -326,7 +333,10 @@ mod tests {
                 index: 0
             })
         );
+    }
 
+    #[test]
+    fn test_grouping() {
         let result = Lexer::with("name:\"(one|two)\"".to_string());
         assert_eq!(
             result,
@@ -348,7 +358,10 @@ mod tests {
                 index: 0
             })
         );
+    }
 
+    #[test]
+    fn test_escaped() {
         let result = Lexer::with("name:\"hello world\"".to_string());
         assert_eq!(
             result,
@@ -370,7 +383,10 @@ mod tests {
                 index: 0
             })
         );
+    }
 
+    #[test]
+    fn test_escaped_and_operator() {
         let result = Lexer::with("name = \"elmer\" , age > 20".to_string());
         assert_eq!(
             result,
@@ -410,7 +426,10 @@ mod tests {
                 index: 0
             })
         );
+    }
 
+    #[test]
+    fn test_like_operator() {
         let result = Lexer::with("name~elmer*".to_string());
         assert_eq!(
             result,
@@ -432,7 +451,10 @@ mod tests {
                 index: 0
             })
         );
+    }
 
+    #[test]
+    fn test_grouping_with_or_operator() {
         let result = Lexer::with("name=(one|two|three)".to_string());
         assert_eq!(
             result,
@@ -478,7 +500,10 @@ mod tests {
                 index: 0
             })
         );
+    }
 
+    #[test]
+    fn test_grouping_with_and_operator() {
         let result = Lexer::with("name=(one,two,three)".to_string());
         assert_eq!(
             result,
@@ -524,7 +549,10 @@ mod tests {
                 index: 0
             })
         );
+    }
 
+    #[test]
+    fn test_quoted() {
         let result = Lexer::with("name:'elmer'".to_string());
         assert_eq!(
             result,
