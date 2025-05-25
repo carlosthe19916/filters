@@ -97,28 +97,28 @@ impl Value {
         matched
     }
 
-    pub fn operator(&self, operator: Kind) -> bool {
-        let operators = self.by_kind(vec![Kind::Operator]);
-        if !operators.is_empty() {
-            operators[0].kind == operator
-        } else {
-            false
-        }
-    }
+    // pub fn operator(&self, operator: Kind) -> bool {
+    //     let operators = self.by_kind(vec![Kind::Operator]);
+    //     if !operators.is_empty() {
+    //         operators[0].kind == operator
+    //     } else {
+    //         false
+    //     }
+    // }
 
-    pub fn join(&self, val: &[char]) -> Value {
-        let mut tokens: Vec<Token> = vec![];
-        for i in 0..self.by_kind(vec![Kind::Literal, Kind::String]).len() {
-            if i > 0 {
-                tokens.push(Token {
-                    kind: Kind::Operator,
-                    value: val.to_owned(),
-                });
-            }
-            tokens.push(self.0[i].clone());
-        }
-        Value(tokens)
-    }
+    // pub fn join(&self, val: &[char]) -> Value {
+    //     let mut tokens: Vec<Token> = vec![];
+    //     for i in 0..self.by_kind(vec![Kind::Literal, Kind::String]).len() {
+    //         if i > 0 {
+    //             tokens.push(Token {
+    //                 kind: Kind::Operator,
+    //                 value: val.to_owned(),
+    //             });
+    //         }
+    //         tokens.push(self.0[i].clone());
+    //     }
+    //     Value(tokens)
+    // }
 }
 
 // List construct.

@@ -1,6 +1,5 @@
-use crate::lexer::{COLON, Kind, LIKE, Token, TokenValue};
+use crate::lexer::Token;
 use crate::parser::Predicate;
-use std::io::BufRead;
 
 #[derive(Debug, PartialEq)]
 pub struct Filter {
@@ -161,7 +160,7 @@ impl Field {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::lexer::{Kind, OR, Token, TokenValue};
+    use crate::lexer::{Kind, Token, TokenValue, OR};
     use crate::parser::Parser;
 
     #[test]
