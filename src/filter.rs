@@ -1,5 +1,5 @@
 use crate::lexer::Token;
-use crate::parser::Predicate;
+use crate::parser::{Predicate, Value};
 
 #[derive(Debug, PartialEq)]
 pub struct Filter {
@@ -77,6 +77,16 @@ impl Field {
     pub fn resource(&self) -> Option<String> {
         let (s, _) = self.split();
         s
+    }
+
+    pub fn value(&self) -> Value {
+        let value = &self.predicate.value;
+        value.clone()
+    }
+
+    pub fn operator(&self) -> Token {
+        let token = &self.predicate.operator;
+        token.clone()
     }
 
     // SQL builds SQL.

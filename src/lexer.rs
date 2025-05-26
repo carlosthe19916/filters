@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 pub const COLON: char = ':';
 pub const COMMA: char = ',';
 pub const AND: char = COMMA;
@@ -116,11 +118,28 @@ pub struct Token {
     pub value: Vec<char>,
 }
 
+impl Display for Token {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let val: String = self.value.iter().collect();
+        write!(f, "{}", val)
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum TokenValue {
     String(String),
     Number(usize),
     Bool(bool),
+}
+
+impl Display for TokenValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TokenValue::String(val) => write!(f, "{}", val),
+            TokenValue::Number(val) => write!(f, "{}", val),
+            TokenValue::Bool(val) => write!(f, "{}", val),
+        }
+    }
 }
 
 impl Token {
